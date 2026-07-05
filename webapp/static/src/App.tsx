@@ -1,10 +1,49 @@
 import { useState, useMemo, useRef, useCallback, useEffect, memo } from 'react';
-import { wordData, minCount, maxCount, totalWords } from './data/words';
+import * as pako from 'pako';
 import { Search, X, Regex } from 'lucide-react';
+import wordDataUrl from './assets/wikipedia_russian_word_frequencies.txt.gz?url'; // returns a string URL
 
 // Constants for virtualization
 const ITEM_HEIGHT = 40;
 const BUFFER_SIZE = 5;
+
+
+let wordDataCache: WordEntry[] | null = null;
+
+
+export async function loadData() {
+  if (wordDataCache) { return wordDataCache; }
+  // Dynamically import the compressed asset
+  // const module = await import('./assets/wikipedia_russian_word_frequencies.txt.gz?arraybuffer');
+  // const compressed = module.default; // ArrayBuffer
+  // const uint8Array = new Uint8Array(compressed);
+  // const decompressed = pako.inflate(uint8Array, { toText: true });
+
+  const response = await fetch(wordDataUrl);
+  const buffer = await response.arrayBuffer();
+  const uint8Array = new Uint8Array(buffer);
+  const decompressed = pako.inflate(uint8Array, { toText: true });
+
+  // console.log('Decompressed data length:', decompressed.length, decompressed.slice(0, 2000));
+  // return [{ word: 'example', count: 1234 }]; // Placeholder for testing
+
+  const lines = decompressed.split('\n').filter(line => line.trim() !== '');
+  const result = lines.map(line => {
+    // Adjust parsing to your format – here we assume "string,number"
+    const [str, num] = line.split(',');
+    return { word: str, count: parseFloat(num) };
+  });
+
+  wordDataCache = result;
+  return result;
+}
+
+
+export interface WordEntry {
+  word: string;
+  count: number;
+}
+
 
 // Memoized list item for performance
 const WordListItem = memo(({ word, count }: { word: string; count: number }) => (
@@ -35,9 +74,20 @@ export default function App() {
   const [isRegexMode, setIsRegexMode] = useState(false);
   const [regexError, setRegexError] = useState<string | null>(null);
 
+  // const [wordData, setWordData] = useState<WordEntry[]>([]);
+
+  // const minCount = Math.min(...wordData.map(w => w.count), 0);
+  // const maxCount = Math.max(...wordData.map(w => w.count), 1000);
+  // const totalWords = wordData.length;
+  
+  const [isWordDataLoading, setIsWordDataLoading] = useState(true);
+  const minCount = wordDataCache?.reduce((min, w) => Math.min(min, w.count), 0) || 0;
+  const maxCount = wordDataCache?.reduce((max, w) => Math.max(max, w.count), 1000) || 1000;
+  const totalWords = wordDataCache?.length || 0;
+
   // Range filter state
-  const [rangeMin, setRangeMin] = useState(minCount);
-  const [rangeMax, setRangeMax] = useState(maxCount);
+  const [rangeMin, setRangeMin] = useState(0);
+  const [rangeMax, setRangeMax] = useState(1000);
 
   // Limit state
   const [limit, setLimit] = useState<number | 'all'>(100);
@@ -63,9 +113,19 @@ export default function App() {
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
+  useEffect(() => {
+    loadData()
+      .then(result => {
+        setRangeMin(result.reduce((min, w) => Math.min(min, w.count), 0));
+        setRangeMax(result.reduce((max, w) => Math.max(max, w.count), 1000));
+        setIsWordDataLoading(false);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
   // Filter the word data
   const filteredWords = useMemo(() => {
-    let result = wordData;
+    let result = wordDataCache || [];
 
     // Filter by count range
     result = result.filter(w => w.count >= rangeMin && w.count <= rangeMax);
@@ -90,7 +150,7 @@ export default function App() {
     }
 
     return result;
-  }, [debouncedSearch, isRegexMode, rangeMin, rangeMax]);
+  }, [debouncedSearch, isRegexMode, rangeMin, rangeMax, isWordDataLoading]);
 
   // Apply limit to filtered results
   const limitedWords = useMemo(() => {
