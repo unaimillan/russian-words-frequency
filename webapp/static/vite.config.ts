@@ -9,4 +9,5 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  base: '/russian-words-frequency/',
 });
