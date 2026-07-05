@@ -8,11 +8,11 @@ const ITEM_HEIGHT = 40;
 const BUFFER_SIZE = 5;
 
 
-let wordDataCache: WordEntry[] | null = null;
+let wordDataCache: WordEntry[] = [ { word: 'Загрузка страницы, пожалуйста подождите!', count: 1 } ];
 
 
 export async function loadData() {
-  if (wordDataCache) { return wordDataCache; }
+  if ( wordDataCache.length > 1 ) { return wordDataCache; }
   // Dynamically import the compressed asset
   // const module = await import('./assets/wikipedia_russian_word_frequencies.txt.gz?arraybuffer');
   // const compressed = module.default; // ArrayBuffer
