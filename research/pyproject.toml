@@ -5,10 +5,18 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "cupy-cuda11x>=12.3.0",
     "datasets>=5.0.0",
     "ipywidgets>=8.1.8",
     "jupyter>=1.1.1",
     "polars>=1.42.1",
     "pymorphy3>=2.0.6",
     "pymorphy3-dicts-ru>=2.4.417150.4580142",
+    "spacy-lookups-data>=1.0.5",
+    "spacy[cuda11x]>=3.8.14",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
 ]
