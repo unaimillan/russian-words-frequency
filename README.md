@@ -29,3 +29,15 @@ Verify that the kernel was successfully registered:
 ```bash
 jupyter kernelspec list
 ```
+
+## Quality of life features
+
+### Installation of git pre-commit hooks to clean out the Jupyter notebook outputs
+
+Install dependencies with
+```bash
+uv tool install pre-commit
+uv tool installnbstripout
+```
+
+and run the `pre-commit install` after cloning the repository to install the hook
