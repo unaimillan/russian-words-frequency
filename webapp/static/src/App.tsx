@@ -71,7 +71,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function App() {
   // Search state
   const [searchText, setSearchText] = useState('');
-  const [isRegexMode, setIsRegexMode] = useState(false);
+  const [isRegexMode, setIsRegexMode] = useState(true);
   const [regexError, setRegexError] = useState<string | null>(null);
 
   // const [wordData, setWordData] = useState<WordEntry[]>([]);
